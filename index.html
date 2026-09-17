@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>PetClinic</title>
+
+    <link
+        rel="icon"
+        type="image/png"
+        href="./images/favicon.png"
+    >
+    <style>
+        :root {
+            --background: #121318;
+            --surface: #222329;
+
+            --text-primary: #fffaf7;
+            --text-secondary: #d2cbcd;
+
+            --border-color: rgba(255, 231, 225, 0.18);
+
+            --primary: #f2a69a;
+            --accent-bright: #ffc8bc;
+            --status: #c6b4ed;
+
+            --background-deep: #28212b;
+            --header-background: rgba(18, 19, 24, 0.9);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            min-height: 100%;
+            margin: 0;
+        }
+
+        body {
+            min-height: 100vh;
+
+            display: flex;
+            flex-direction: column;
+
+            color: var(--text-primary);
+
+            font-family: "Trebuchet MS", "Noto Sans KR", sans-serif;
+
+            background:
+                linear-gradient(
+                    135deg,
+                    var(--background),
+                    var(--background-deep)
+                );
+
+            transition:
+                background 180ms ease,
+                color 180ms ease;
+        }
+
+        /* =========================================
+           HEADER
+        ========================================= */
+
+        .header,
+        main,
+        footer {
+            width: 100%;
+        }
+
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            min-height: 78px;
+
+            padding: 20px 24px;
+
+            border-bottom: 1px solid var(--border-color);
+
+            background: var(--header-background);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+
+            gap: 12px;
+
+            font-size: 15px;
+            font-weight: 700;
+
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+
+        .brand-mark {
+            display: grid;
+
+            width: 32px;
+            height: 32px;
+
+            place-items: center;
+
+            color: var(--background);
+
+            font-size: 13px;
+            font-weight: 900;
+
+            border-radius: 9px;
+
+            background: var(--primary);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+
+            gap: 20px;
+        }
+
+        .header-status {
+            display: flex;
+            align-items: center;
+
+            gap: 8px;
+
+            color: var(--text-secondary);
+
+            font-size: 12px;
+        }
+
+        /* =========================================
+           THEME
+        ========================================= */
+
+        .theme-swatch {
+            width: 9px;
+            height: 9px;
+
+            border-radius: 50%;
+
+            background: var(--primary);
+        }
+
+        .theme-toggle {
+            display: inline-flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+            min-height: 36px;
+
+            padding: 8px 12px;
+
+            color: var(--text-primary);
+
+            font: inherit;
+            font-size: 12px;
+
+            border: 1px solid var(--border-color);
+            border-radius: 999px;
+
+            background: rgba(255, 255, 255, 0.06);
+
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover,
+        .theme-toggle:focus-visible {
+            border-color: var(--primary);
+
+            outline: none;
+        }
+
+        /* =========================================
+           MAIN
+        ========================================= */
+
+        main {
+            flex: 1;
+
+            padding: 0;
+        }
+
+        .scroll-sector {
+            position: relative;
+
+            display: flex;
+
+            min-height: 86vh;
+
+            align-items: center;
+
+            overflow: hidden;
+
+            padding: 80px clamp(24px, 8vw, 120px);
+
+            isolation: isolate;
+        }
+
+        .scroll-sector::before {
+            position: absolute;
+
+            z-index: -2;
+
+            inset: 0;
+
+            background: var(--sector-color);
+
+            content: "";
+
+            transition: background 300ms ease;
+
+            box-shadow:
+                inset 0 1px 0 rgba(255, 255, 255, 0.08),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.14);
+        }
+
+        .scroll-sector::after {
+            position: absolute;
+
+            z-index: -1;
+
+            inset: 0;
+
+            background-image: var(--sector-image);
+
+            background-position: center;
+            background-size: cover;
+
+            opacity: 0.06;
+
+            transform: scale(1.06);
+
+            content: "";
+
+            transition:
+                opacity 1400ms ease,
+                transform 1800ms ease;
+        }
+
+        .scroll-sector.is-visible::after {
+            opacity: 0.52;
+
+            transform: scale(1);
+        }
+
+        /* =========================================
+           CONTENT
+        ========================================= */
+
+        .sector-content {
+            width: min(620px, 100%);
+
+            padding: clamp(28px, 5vw, 56px);
+
+            border-left: 3px solid var(--primary);
+
+            background: rgba(15, 16, 24, 0.56);
+
+            backdrop-filter: blur(4px);
+        }
+
+        .sector-label {
+            margin: 0 0 16px;
+
+            color: var(--accent-bright);
+
+            font-size: 12px;
+            font-weight: 700;
+
+            letter-spacing: 0.16em;
+
+            text-transform: uppercase;
+        }
+
+        .sector-content h1 {
+            margin: 0 0 18px;
+
+            color: var(--text-primary);
+
+            font-family: Georgia, serif;
+
+            font-size: clamp(40px, 7vw, 78px);
+
+            font-weight: 400;
+
+            line-height: 0.98;
+        }
+
+        .sector-description {
+            max-width: 500px;
+
+            margin: 0;
+
+            color: var(--text-secondary);
+
+            font-size: 16px;
+
+            line-height: 1.8;
+        }
+
+        /* =========================================
+           ACTION BUTTON
+        ========================================= */
+
+        .sector-actions {
+            display: flex;
+
+            flex-wrap: wrap;
+
+            gap: 12px;
+
+            margin-top: 30px;
+        }
+
+        .action-button {
+            display: inline-flex;
+
+            min-height: 46px;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 0 22px;
+
+            color: #211d22;
+
+            font-size: 14px;
+            font-weight: 700;
+
+            text-decoration: none;
+
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+
+            background: var(--primary);
+
+            cursor: pointer;
+
+            transition:
+                transform 160ms ease,
+                background 160ms ease,
+                border-color 160ms ease,
+                box-shadow 160ms ease;
+        }
+
+        .action-button:hover {
+            border-color: var(--accent-bright);
+
+            background: var(--accent-bright);
+
+            transform: translateY(-2px);
+
+            box-shadow:
+                0 10px 30px rgba(0, 0, 0, 0.22);
+        }
+
+        .action-button:active {
+            transform: translateY(0);
+        }
+
+        .action-button:focus-visible {
+            outline: 3px solid rgba(242, 166, 154, 0.28);
+            outline-offset: 3px;
+        }
+
+        /* =========================================
+           SECTOR BACKGROUND
+        ========================================= */
+
+        .sector-dog {
+            --sector-color: #28232d;
+            --sector-image: url("images/dog.png");
+        }
+
+        .sector-clinic {
+            --sector-color: #2c252b;
+            --sector-image: url("images/dogs.png");
+        }
+
+        .sector-play {
+            --sector-color: #30272a;
+            --sector-image: url("images/medical.png");
+        }
+
+        /* =========================================
+           FOOTER
+        ========================================= */
+
+        footer {
+            display: flex;
+
+            justify-content: space-between;
+
+            padding: 22px 24px 28px;
+
+            color: var(--text-secondary);
+
+            font-size: 12px;
+
+            border-top: 1px solid var(--border-color);
+        }
+
+        footer p {
+            margin: 0;
+        }
+
+        /* =========================================
+           LIGHT THEME
+        ========================================= */
+
+        body[data-theme="light"] {
+            --background: #fffdfb;
+            --surface: #ffffff;
+
+            --text-primary: #211d22;
+            --text-secondary: #62585d;
+
+            --border-color: rgba(78, 54, 61, 0.16);
+
+            --primary: #df9589;
+            --accent-bright: #b96e66;
+            --status: #8f7bc2;
+
+            --background-deep: #f9e9e5;
+
+            --header-background: rgba(255, 253, 251, 0.92);
+        }
+
+        body[data-theme="light"] .header {
+            background: var(--header-background);
+        }
+
+        body[data-theme="light"] .scroll-sector::after {
+            opacity: 0.1;
+        }
+
+        body[data-theme="light"] .scroll-sector.is-visible::after {
+            opacity: 0.42;
+        }
+
+        body[data-theme="light"] .sector-dog {
+            --sector-color: #f8e8e5;
+        }
+
+        body[data-theme="light"] .sector-clinic {
+            --sector-color: #eee8f4;
+        }
+
+        body[data-theme="light"] .sector-play {
+            --sector-color: #f9eee2;
+        }
+
+        body[data-theme="light"] .sector-content {
+            background: rgba(255, 255, 255, 0.68);
+        }
+
+        /* =========================================
+           RESPONSIVE
+        ========================================= */
+
+        @media (max-width: 760px) {
+
+            .scroll-sector {
+                min-height: 78vh;
+
+                padding: 56px 20px;
+            }
+
+            .sector-content {
+                padding: 28px;
+            }
+
+            .sector-actions {
+                margin-top: 24px;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+
+            footer {
+                display: block;
+
+                padding-right: 20px;
+                padding-left: 20px;
+            }
+
+            footer p + p {
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- =========================================
+         HEADER
+    ========================================== -->
+
+    <header class="header">
+
+        <div class="brand">
+            <span class="brand-mark">3T</span>
+            <span>PetClinic</span>
+        </div>
+
+        <div class="header-controls">
+
+            <button
+                class="theme-toggle"
+                type="button"
+                aria-label="테마 색상 변경"
+                title="테마 색상 변경"
+            >
+                <span
+                    class="theme-swatch"
+                    aria-hidden="true"
+                ></span>
+
+                <span class="theme-label">
+                    Dark
+                </span>
+            </button>
+
+        </div>
+
+    </header>
+
+
+    <!-- =========================================
+         MAIN
+    ========================================== -->
+
+    <main>
+
+        <!-- =====================================
+             01 WEB AVAILABILITY
+        ====================================== -->
+
+        <section class="scroll-sector sector-dog">
+
+            <div class="sector-content">
+
+                <p class="sector-label">
+                    01 · WEB AVAILABILITY
+                </p>
+
+                <h1>
+                    Always<br>
+                    Available.
+                </h1>
+
+                <p class="sector-description">
+                    WEB 서버는 다중 인스턴스로 구성되어
+                    일부 서버에 장애가 발생하더라도
+                    Load Balancer를 통해 정상 서버로 트래픽을 전달합니다.
+                </p>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             02 FAILURE ISOLATION
+        ====================================== -->
+
+        <section class="scroll-sector sector-clinic">
+
+            <div class="sector-content">
+
+                <p class="sector-label">
+                    02 · FAILURE ISOLATION
+                </p>
+
+                <h1>
+                    Failure<br>
+                    Isolated.
+                </h1>
+
+                <p class="sector-description">
+                    WEB과 WAS 계층을 분리하여
+                    애플리케이션 계층에 장애가 발생하더라도
+                    WEB 계층은 독립적으로 정적 서비스를 계속 제공합니다.
+                </p>
+
+                <div class="sector-actions">
+
+                    <a
+                        class="action-button"
+                        href="/petclinic/"
+                    >
+                        WAS로 접근
+                    </a>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =====================================
+             03 AUTOMATIC RECOVERY
+        ====================================== -->
+
+        <section class="scroll-sector sector-play">
+
+            <div class="sector-content">
+
+                <p class="sector-label">
+                    03 · AUTOMATIC RECOVERY
+                </p>
+
+                <h1>
+                    Ready to<br>
+                    Recover.
+                </h1>
+
+                <p class="sector-description">
+                    Health Check와 Managed Instance Group을 통해
+                    비정상 인스턴스를 감지하고 정상 인스턴스로 트래픽을 전환하여
+                    서비스 가용성을 유지합니다.
+                </p>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================================
+         FOOTER
+    ========================================== -->
+
+    <footer>
+        <p>
+            PetClinic Web Server
+        </p>
+    </footer>
+
+
+    <!-- =========================================
+         SCRIPT
+    ========================================== -->
+
+    <script>
+        /*
+         * Theme
+         */
+
+        const themeToggle =
+            document.querySelector(".theme-toggle");
+
+        const themeLabel =
+            document.querySelector(".theme-label");
+
+        const savedTheme =
+            localStorage.getItem("petclinic-theme") || "";
+
+
+        function applyTheme(theme) {
+
+            if (theme === "light") {
+
+                document.body.dataset.theme = "light";
+
+                themeLabel.textContent = "Light";
+
+            } else {
+
+                delete document.body.dataset.theme;
+
+                themeLabel.textContent = "Dark";
+            }
+
+
+            themeToggle.setAttribute(
+                "aria-label",
+                `${themeLabel.textContent} 테마 적용됨. 클릭하여 변경`
+            );
+
+
+            localStorage.setItem(
+                "petclinic-theme",
+                theme
+            );
+        }
+
+
+        applyTheme(savedTheme);
+
+
+        themeToggle.addEventListener(
+            "click",
+            () => {
+
+                const nextTheme =
+                    document.body.dataset.theme === "light"
+                        ? ""
+                        : "light";
+
+                applyTheme(nextTheme);
+            }
+        );
+
+
+        /*
+         * Scroll Animation
+         */
+
+        const sectors =
+            document.querySelectorAll(".scroll-sector");
+
+
+        const sectorObserver =
+            new IntersectionObserver(
+                (entries) => {
+
+                    entries.forEach(
+                        (entry) => {
+
+                            entry.target.classList.toggle(
+                                "is-visible",
+                                entry.isIntersecting
+                            );
+
+                        }
+                    );
+
+                },
+                {
+                    threshold: 0.32
+                }
+            );
+
+
+        sectors.forEach(
+            (sector) => sectorObserver.observe(sector)
+        );
+    </script>
+
+</body>
+</html>
