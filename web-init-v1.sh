@@ -6,7 +6,15 @@ set -euo pipefail
 # NOVA - WEB Init Script
 # Golden Image : npc-tb-golden-web-v1
 # Role         : WEB
+#
+# GitHub       : bespin-nova/WEB
+# Source       : WEB/web/
+# GCS          : gs://npc-bucket-nova/web/
 # ============================================================
+
+# ------------------------------------------------------------
+# Environment
+# ------------------------------------------------------------
 
 BUCKET_NAME="npc-bucket-nova"
 WEB_BUCKET_PATH="web"
@@ -19,6 +27,7 @@ INTERNAL_LB_PORT="8080"
 
 PROXY_CONF="/etc/httpd/conf.d/petclinic-proxy.conf"
 CACHE_CONF="/etc/httpd/conf.d/cache-control.conf"
+
 
 echo "========================================"
 echo " NOVA WEB Initialization Start"
@@ -36,7 +45,7 @@ if ! command -v httpd >/dev/null 2>&1; then
     exit 1
 fi
 
-# pipefail + grep -q 조합 문제를 피하기 위해
+# pipefail + grep -q 조합 문제 방지를 위해
 # Apache 모듈 목록을 먼저 변수에 저장
 HTTPD_MODULES="$(httpd -M 2>&1)"
 
@@ -63,14 +72,19 @@ echo "Apache environment OK."
 # ------------------------------------------------------------
 
 echo "[2/7] Downloading WEB contents from Cloud Storage..."
+echo "Source: gs://${BUCKET_NAME}/${WEB_BUCKET_PATH}"
 
 rm -rf "${TEMP_DIR}"
 mkdir -p "${TEMP_DIR}"
 
-gcloud storage cp --recursive \
-    "gs://${BUCKET_NAME}/${WEB_BUCKET_PATH}/*" \
-    "${TEMP_DIR}/"
+# Cloud Build가 배포한
+# gs://npc-bucket-nova/web/ 내용을 임시 디렉터리와 동기화
+gcloud storage rsync \
+    --recursive \
+    "gs://${BUCKET_NAME}/${WEB_BUCKET_PATH}" \
+    "${TEMP_DIR}"
 
+# 필수 WEB 진입 파일 검증
 if [ ! -f "${TEMP_DIR}/index.html" ]; then
     echo "ERROR: index.html was not downloaded."
     exit 1
@@ -86,7 +100,10 @@ echo "WEB contents downloaded."
 echo "[3/7] Deploying WEB contents..."
 
 # 기존 WEB 파일 제거
-find "${WEB_ROOT}" -mindepth 1 -maxdepth 1 -exec rm -rf {} +
+find "${WEB_ROOT}" \
+    -mindepth 1 \
+    -maxdepth 1 \
+    -exec rm -rf {} +
 
 # 다운로드한 WEB 파일 배포
 cp -a "${TEMP_DIR}/." "${WEB_ROOT}/"
@@ -94,7 +111,7 @@ cp -a "${TEMP_DIR}/." "${WEB_ROOT}/"
 # Apache 소유권 설정
 chown -R apache:apache "${WEB_ROOT}"
 
-# SELinux Context 복구
+# GCS에서 복사된 파일의 SELinux Context 복구
 restorecon -Rv "${WEB_ROOT}"
 
 echo "WEB contents deployed."
@@ -141,7 +158,7 @@ cat > "${CACHE_CONF}" <<'EOF'
         Header set Cache-Control "no-cache, no-store, must-revalidate"
     </FilesMatch>
 
-    # 이미지 정적 리소스
+    # 이미지 정적 리소스는 1일 캐시
     <FilesMatch "\.(jpg|jpeg|png|gif|svg|webp|ico)$">
         Header set Cache-Control "public, max-age=86400"
     </FilesMatch>
@@ -200,6 +217,7 @@ echo "========================================"
 echo " NOVA WEB Initialization Complete"
 echo "========================================"
 echo "WEB Root        : ${WEB_ROOT}"
+echo "GCS Source      : gs://${BUCKET_NAME}/${WEB_BUCKET_PATH}"
 echo "Internal LB     : ${INTERNAL_LB_IP}:${INTERNAL_LB_PORT}"
 echo "PetClinic Proxy : /petclinic/"
 echo "========================================"
